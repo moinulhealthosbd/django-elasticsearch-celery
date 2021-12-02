@@ -1,9 +1,10 @@
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
-from .models import (
+from core.models import (
     Category,
     Product
 )
+
 
 @registry.register_document
 class CategoryDocument(Document):
@@ -23,10 +24,11 @@ class CategoryDocument(Document):
 
 @registry.register_document
 class ProductDocument(Document):
+    
     category = fields.ObjectField(
         properties={
             "id": fields.IntegerField(),
-            "title": fields.TextField()
+            "title": fields.KeywordField()
         }
     )
     

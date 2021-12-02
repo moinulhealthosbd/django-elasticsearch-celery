@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'core',
     'rest_framework',
     'django_elasticsearch_dsl',
+    'search',
 ]
 
 MIDDLEWARE = [
@@ -135,9 +136,9 @@ ELASTICSEARCH_DSL = {
 }
 
 # CELERY STUFF
-CELERY_BROKER_URL = 'redis://localhost:6379'
-# CELERY_BROKER_URL = 'amqp://localhost'
-# CELERY_BROKER_URL = 'amqp://localhost'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+# CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'amqp://localhost'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TIMEZONE = 'Asia/Dhaka'

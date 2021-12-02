@@ -1,4 +1,5 @@
 import os
+from datetime import time, timedelta
 
 from celery import Celery
 
@@ -11,8 +12,10 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.conf.beat_shedule = {
     "update_product_3s": {
-        "task": "core.tasks.update_product_price",
-        "schedule": 3.0
+        "task": "core.tasks.update",
+    },
+    "greet_user": {
+        "task": "core.tasks.greet_user"
     }
 }
 
