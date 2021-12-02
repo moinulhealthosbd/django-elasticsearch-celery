@@ -70,6 +70,9 @@ ipython_config.py
 __pypackages__/
 
 # Celery stuff
+*.bak
+*.dat
+*.dir
 celerybeat-schedule
 celerybeat.pid
 

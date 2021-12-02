@@ -1,5 +1,6 @@
+import abc
 import requests
-from collections import OrderedDict 
+from collections import OrderedDict
 
 from django.shortcuts import HttpResponse
 
@@ -7,7 +8,6 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.pagination import LimitOffsetPagination
 
 from elasticsearch_dsl import Q
 
@@ -15,12 +15,15 @@ from .models import (
     Category, Product
 )
 from .serializers import (
+    CategorySerializer,
     ProductSerializer
 )
-from .documents import ProductDocument
+from .documents import CategoryDocument, ProductDocument
 
 
 class CreateProducts(APIView):
+    """Creates some products data from an external api"""
+    
     def get(self, *args, **kwargs):
         url = "https://fakestoreapi.com/products"
         response = requests.get(url).json()
@@ -46,11 +49,19 @@ class CreateProducts(APIView):
         )
 
 
+class ListProducts(generics.ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+     
+
+
 class ElasticSearchAPIView(APIView):
     serializer_class = None
     document_class = None
 
+    @abc.abstractmethod
     def generate_q_expression(self, query):
+        "The method must be overridden to return query expression"
         pass
 
     def get(self, request, query):
@@ -58,20 +69,18 @@ class ElasticSearchAPIView(APIView):
             q = self.generate_q_expression(query)
             search = self.document_class.search().query(q)
             response = search.execute()
-            results = []
 
-            for result in response:
-                product = Product.objects.get(id=result.id)
-                serializer = ProductSerializer(product)
-                results.append(serializer.data)
+            print(f'Found {response.hits.total.value} hit(s) for query: "{query}"')
+
+            serializer = self.serializer_class(response, many=True)
 
             return Response(
-                results,
+                serializer.data,
                 status=status.HTTP_200_OK
             )
-
+        
         except Exception as e:
-            return HttpResponse(e, 500)
+            return HttpResponse(e, status=500)
 
 
 class SearchProducts(ElasticSearchAPIView):
@@ -82,51 +91,18 @@ class SearchProducts(ElasticSearchAPIView):
         return Q('bool',
                  should=[
                      Q('match', title=query),
-                 ], minimum_should_match=1)
+                     Q('match', category__title=query),
+                 ])
 
 
-class ListProducts(generics.ListAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-     
+class SearchCategories(ElasticSearchAPIView):
+    serializer_class = CategorySerializer
+    document_class = CategoryDocument
 
-
-# class PaginatedElasticSearchAPIView(APIView, LimitOffsetPagination):
-#     serializer_class = None
-#     document_class = None
-
-#     def generate_q_expression(self, query):
-#         pass
-
-#     def get_paginated_response(self, data):
-#         return Response(OrderedDict([
-#             ('results', data)
-#         ]))
-
-#     def get(self, request, query):
-#         try:
-#             q = self.generate_q_expression(query)
-#             search = self.document_class.search().query(q)
-#             response = search.execute()
-
-#             print(f'Found {response.hits.total.value} hit(s) for query: "{query}"')
-
-#             results = self.paginate_queryset(response, request, view=self)
-#             print("data----")
-#             serializer = self.serializer_class(results, many=True)
-#             print("success---", serializer.data)
-#             return self.get_paginated_response(serializer.data)
-#         except Exception as e:
-#             return HttpResponse(e, status=500)
-
-
-# class SearchProducts(PaginatedElasticSearchAPIView, LimitOffsetPagination):
-#     serializer_class = ProductSerializer
-#     document_class = ProductDocument
-
-#     def generate_q_expression(self, query):
-#         return Q('bool',
-#                  should=[
-#                      Q('match', title=query),
-#                  ], minimum_should_match=1)
-    
+    def generate_q_expression(self, query):
+        return Q(
+            "bool",
+            should=[
+                Q("match", title=query),
+            ]
+        )

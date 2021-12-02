@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import CreateProducts, ListProducts, SearchProducts
+from .views import CreateProducts, ListProducts, SearchCategories, SearchProducts
 
 
 urlpatterns = [
@@ -19,6 +19,10 @@ urlpatterns = [
         SearchProducts.as_view(),
         name='search-products'
     ),
-    
+    path(
+        'search-categories/<str:query>/',
+        SearchCategories.as_view(),
+        name='search-categories'
+    ),
 
 ]
