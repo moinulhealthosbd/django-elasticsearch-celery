@@ -2,6 +2,8 @@ import random
 from decimal import Decimal
 from datetime import time, timedelta
 
+from django.core.cache import cache
+
 from celery import shared_task
 from celery.decorators import periodic_task
 
@@ -33,3 +35,8 @@ def update():
 @periodic_task(run_every=timedelta(seconds=20))
 def greet_user():
     greet.delay("nabil")
+
+@shared_task
+def update_product_cache():
+    products = Product.objects.all()
+    cache.set("products", products)

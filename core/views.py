@@ -1,5 +1,11 @@
 import requests
 
+from django.conf import settings
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
@@ -42,6 +48,33 @@ class CreateProducts(APIView):
         )
 
 
-class ListProducts(generics.ListAPIView):
-    queryset = Product.objects.all()
+class CacheApiView(APIView):
+    model = None
+    serializer_class = None
+    cache_key = None
+
+    def get(self, *args, **kwargs):
+        queryset = cache.get(self.cache_key)
+        print(queryset)
+
+        if queryset:
+            serializer = self.serializer_class(queryset, many=True)
+        else:
+            queryset = self.model.objects.all()
+            cache.set(
+                "products",
+                queryset,
+                None
+            )
+            serializer = self.serializer_class(queryset, many=True)
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+
+class ListProducts(CacheApiView):
+    model = Product
     serializer_class = ProductSerializer
+    cache_key = "products"

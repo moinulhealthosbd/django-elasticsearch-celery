@@ -16,7 +16,7 @@ app.conf.beat_shedule = {
     },
     "greet_user": {
         "task": "core.tasks.greet_user"
-    }
+    },
 }
 
 app.autodiscover_tasks()
