@@ -1,10 +1,7 @@
+import json
 import requests
 
-from django.conf import settings
 from django.core.cache import cache
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
-from django.core.cache.backends.base import DEFAULT_TIMEOUT
 
 from rest_framework.views import APIView
 from rest_framework import generics
@@ -58,15 +55,15 @@ class CacheApiView(APIView):
         print(queryset)
 
         if queryset:
-            serializer = self.serializer_class(queryset, many=True)
+            serializer = self.serializer_class(json.loads(queryset), many=True)
         else:
             queryset = self.model.objects.all()
+            serializer = self.serializer_class(queryset, many=True)
             cache.set(
                 self.cache_key,
-                queryset,
+                json.dumps(serializer.data),
                 None
             )
-            serializer = self.serializer_class(queryset, many=True)
 
         return Response(
             serializer.data,
