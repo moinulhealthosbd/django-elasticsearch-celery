@@ -52,7 +52,6 @@ class CacheApiView(APIView):
 
     def get(self, *args, **kwargs):
         queryset = cache.get(self.cache_key)
-        print(queryset)
 
         if queryset:
             serializer = self.serializer_class(json.loads(queryset), many=True)

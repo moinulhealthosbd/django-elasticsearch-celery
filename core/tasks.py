@@ -34,9 +34,4 @@ def update():
 
 @periodic_task(run_every=timedelta(seconds=20))
 def greet_user():
-    greet.delay("nabil")
-
-@shared_task
-def update_product_cache():
-    products = Product.objects.all()
-    cache.set("products", products)
+    greet.delay("user")
