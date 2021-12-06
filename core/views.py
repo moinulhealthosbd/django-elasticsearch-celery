@@ -62,7 +62,7 @@ class CacheApiView(APIView):
         else:
             queryset = self.model.objects.all()
             cache.set(
-                "products",
+                self.cache_key,
                 queryset,
                 None
             )
