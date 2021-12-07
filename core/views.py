@@ -1,5 +1,6 @@
 import json
 import requests
+import redis
 
 from django.core.cache import cache
 
@@ -54,13 +55,22 @@ class CacheApiView(APIView):
         queryset = cache.get(self.cache_key)
 
         if queryset:
-            serializer = self.serializer_class(json.loads(queryset), many=True)
+            data = list(queryset.values())
+            serializer = self.serializer_class(data, many=True)
+            print("from cache")
         else:
+            print("from db")
             queryset = self.model.objects.all()
-            serializer = self.serializer_class(queryset, many=True)
+            data_to_cache = {}
+            serializer = ProductSerializer(queryset, many=True)
+
+            for product in queryset:
+                product_serializer = self.serializer_class(product)
+                data_to_cache[str(product.id)] = product_serializer.data
+
             cache.set(
                 self.cache_key,
-                json.dumps(serializer.data),
+                data_to_cache,
                 None
             )
 
